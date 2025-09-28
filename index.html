@@ -314,6 +314,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: relative;
         }
 
         .logo {
@@ -323,6 +324,7 @@
             text-decoration: none;
             transition: transform 0.3s ease;
             cursor: pointer;
+            z-index: 1001;
         }
 
         .logo:hover {
@@ -335,6 +337,39 @@
             margin: 0;
             padding: 0;
             gap: 2rem;
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 0.5rem;
+            z-index: 1001;
+            transition: all 0.3s ease;
+        }
+
+        .hamburger-line {
+            width: 25px;
+            height: 3px;
+            background: #667eea;
+            margin: 3px 0;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .mobile-menu-toggle.active .hamburger-line:nth-child(1) {
+            transform: rotate(45deg) translate(6px, 6px);
+            background: white;
+        }
+
+        .mobile-menu-toggle.active .hamburger-line:nth-child(2) {
+            opacity: 0;
+        }
+
+        .mobile-menu-toggle.active .hamburger-line:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+            background: white;
         }
 
         .nav-link {
@@ -1189,11 +1224,76 @@
             }
         }
 
-        /* Mobile Responsiveness */
+        /* Mobile Menu Styles */
         @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: flex;
+            }
+
             .nav-menu {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 100%;
+                height: 100vh;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 3rem;
+                transition: right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                z-index: 1000;
+                backdrop-filter: blur(10px);
+            }
+
+            .nav-menu.active {
+                right: 0;
+            }
+
+            .nav-menu li {
+                opacity: 0;
+                transform: translateX(50px);
+                transition: all 0.5s ease;
+            }
+
+            .nav-menu.active li {
+                opacity: 1;
+                transform: translateX(0);
+            }
+
+            .nav-menu.active li:nth-child(1) { transition-delay: 0.1s; }
+            .nav-menu.active li:nth-child(2) { transition-delay: 0.2s; }
+            .nav-menu.active li:nth-child(3) { transition-delay: 0.3s; }
+            .nav-menu.active li:nth-child(4) { transition-delay: 0.4s; }
+
+            .nav-link {
+                color: white !important;
+                font-size: 1.5rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                padding: 1rem 2rem;
+                border-radius: 10px;
+                transition: all 0.3s ease;
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+
+            .nav-link:hover,
+            .nav-link.active {
+                background: rgba(255, 255, 255, 0.2);
+                transform: translateY(-5px) scale(1.05);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            }
+
+            .nav-link::after {
                 display: none;
             }
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
 
             .hero h1 {
                 font-size: 2.5rem;
@@ -1715,7 +1815,15 @@
     <header class="header">
         <nav class="nav-container">
             <a href="#" class="logo" data-page="home">B.J.SUJITHA's Blog</a>
-            <ul class="nav-menu">
+            
+            <!-- Mobile Menu Toggle -->
+            <div class="mobile-menu-toggle" id="mobileMenuToggle">
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+            </div>
+            
+            <ul class="nav-menu" id="navMenu">
                 <li><a href="#" class="nav-link active" data-page="home">Home</a></li>
                 <li><a href="#" class="nav-link" data-page="about">About</a></li>
                 <li><a href="#" class="nav-link" data-page="categories">Categories</a></li>
@@ -2318,6 +2426,8 @@
         const pages = document.querySelectorAll('.page');
         const contactForm = document.getElementById('contactForm');
         const successMessage = document.getElementById('successMessage');
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const navMenu = document.getElementById('navMenu');
 
         // Initialize the application
         function initApp() {
@@ -2515,6 +2625,36 @@
                     handleContactForm();
                 });
             }
+
+            // Mobile menu toggle
+            mobileMenuToggle.addEventListener('click', () => {
+                toggleMobileMenu();
+            });
+
+            // Close mobile menu when clicking on nav links
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (navMenu.classList.contains('active')) {
+                        closeMobileMenu();
+                    }
+                });
+            });
+
+            // Close mobile menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (navMenu.classList.contains('active') && 
+                    !navMenu.contains(e.target) && 
+                    !mobileMenuToggle.contains(e.target)) {
+                    closeMobileMenu();
+                }
+            });
+
+            // Close mobile menu on escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && navMenu.classList.contains('active')) {
+                    closeMobileMenu();
+                }
+            });
         }
 
         // Show specific page
@@ -2757,6 +2897,19 @@
             }
         });
 
+        // Mobile menu functions
+        function toggleMobileMenu() {
+            mobileMenuToggle.classList.toggle('active');
+            navMenu.classList.toggle('active');
+            document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : 'auto';
+        }
+
+        function closeMobileMenu() {
+            mobileMenuToggle.classList.remove('active');
+            navMenu.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
         // Initialize the application when page loads
         document.addEventListener('DOMContentLoaded', initApp);
 
@@ -2773,5 +2926,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'985ff9ba774bc6aa',t:'MTc1OTAyODI2OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9861bc3d95504093',t:'MTc1OTA0NjcyMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
